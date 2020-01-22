@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t akaheidia/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true akaheidia/react-test npm test
+
+after_success:
+  - docker build -t akaheidia/multi-client ./client
+  - docker build -t akaheidia/multi-nginx ./nginx
+  - docker build -t akaheidia/multi-server ./server
+  - docker build -t akaheidia/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to DockerHub
+  - docker push akaheidia/multi-client
+  - docker push akaheidia/multi-nginx
+  - docker push akaheidia/multi-server
+  - docker push akaheidia/multi-worker
+
